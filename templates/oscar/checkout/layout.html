@@ -1,0 +1,108 @@
+{% extends "oscar/layout.html" %}
+{% load i18n %}
+{% load category_tags %}
+
+{% block layout %}
+
+    
+       
+    <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
+	    <div class="container">
+	      <a class="navbar-brand" href="{% url 'start' %}">Winkel</a>
+	      
+
+	      <div class="collapse navbar-collapse" id="ftco-nav">
+	        <ul class="navbar-nav ml-auto">
+	          <li class="nav-item active"><a href="{% url 'start' %}" class="nav-link">Home</a></li>
+	          <li class="nav-item dropdown">
+            {% category_tree depth=2 as tree_categories %}
+
+              <a class="nav-link dropdown-toggle" href="#" id="dropdown04" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Shop</a>
+                {% if tree_categories %}
+              
+              <div class="dropdown-menu" aria-labelledby="dropdown04">
+
+                {% for tree_category in tree_categories %}
+                {% if tree_category.has_children %}
+              	<a class="dropdown-item" href="{{ tree_category.get_absolute_url }}">{{ tree_category.name }}</a>
+                {% else %}
+              	<a class="dropdown-item" href="{{ tree_category.get_absolute_url }}">{{ tree_category.name }}</a>
+
+                {% endif %}
+                {% for close in tree_category.num_to_close %}                                  
+                                       
+                {% endfor %}
+                 {% endfor %}
+              </div>
+             
+                {% endif %}
+            </li>
+	         
+	          <li class="nav-item"><a href="contact.html" class="nav-link">Contact</a></li>
+              {% if user.is_authenticated %}
+            {% block nav_account_navbar_authenticated %}
+            <li class="nav-item">
+            {% if num_unread_notifications > 0 %}
+            {# If user has new notifications - we change account link to go to inbox #}
+            <a href="{% url 'customer:notifications-inbox' %}" class="nav-link">
+                <i class="icon-user"></i>
+                {% trans "Account" %}
+                <span class="label label-warning">{{ num_unread_notifications }}</span>
+            </a>
+            {% else %}
+            <a href="{% url 'customer:summary' %}"  class="nav-link" style="font-size: 10px;font-weight: 400;color: #000000;text-transform: uppercase;letter-spacing: 2px;opacity: 1 !important;padding-left: 20px;padding-right: 20px;"><i class="icon-user"></i> {% trans "Account" %}</a>
+            {% endif %}
+            </li>
+            {% if user.is_staff or perms.partner.dashboard_access %}
+            <li class="nav-item"><a href="{% url 'dashboard:index' %}" class="nav-link" style="font-size: 10px;font-weight: 400;color: #000000;text-transform: uppercase;letter-spacing: 2px;opacity: 1 !important;padding-left: 20px;padding-right: 20px;"><i class="icon-list-ul" ></i> {% trans "Dashboard" %}</a></li>
+            {% endif %}
+            <li class="nav-item"><a id="logout_link" href="{% url 'customer:logout' %}"  class="nav-link" style="font-size: 10px;font-weight: 400;color: #000000;text-transform: uppercase;letter-spacing: 2px;opacity: 1 !important;padding-left: 20px;padding-right: 20px;"> {% trans "Logout" %}</a></li>
+            {% endblock %}
+            {% else %}
+            <li class="nav-item"><a id="login_link" href="{% url 'customer:login' %}"  class="nav-link" style="font-size: 10px;font-weight: 400;color: #000000;text-transform: uppercase;letter-spacing: 2px;opacity: 1 !important;padding-left: 20px;padding-right: 20px;"><i class="icon-signin"></i>Login or register</a></li>
+            {% endif %}
+	          <li class="nav-item cta cta-colored"><a href="{% url 'basket:summary' %}" class="nav-link" style="padding-bottom: 4rem;padding-left: 20px;padding-right: 20px;"><span class="icon-shopping_cart"></span>[0]</a></li>
+
+            </ul>
+
+	        </ul>
+	      </div>
+	    </div>
+	  </nav>
+      <header class="header container-fluid">
+        {% block checkout_nav %}{% endblock %}
+    </header><!-- /header -->
+
+    <div class="container-fluid page">
+       <div class="page_inner">
+            {% include 'oscar/partials/alert_messages.html' %}
+
+            <div class="sub-header">
+                <h1>{% block checkout_title %}{% endblock %}</h1>
+            </div>
+
+            <!-- The main nav on checkout pages contain links to modal flatpages -->
+            {% block modal %}
+                {% load flatpages %}
+                {% get_flatpages '/order/' as flatpages %}
+                {% for page in flatpages %}
+                <div id="{{ page.title|slugify }}" class="modal hide fade">
+                    <div class="modal-header">
+                        <a class="close" data-dismiss="modal">×</a>
+                        <h3>{{ page.title }}</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="large-content">
+                            {{ page.content|safe }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endblock %}
+
+            {% block content %}{% endblock %}
+
+        </div><!-- /page_inner -->
+    </div>
+    {% include "oscar/partials/footer.html" %}
+{% endblock %}
